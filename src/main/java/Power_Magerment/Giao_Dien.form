@@ -147,6 +147,9 @@
       <Properties>
         <Property name="text" type="java.lang.String" value="&#x110;&#x1eb7;t"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="datActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="huy">
       <Properties>

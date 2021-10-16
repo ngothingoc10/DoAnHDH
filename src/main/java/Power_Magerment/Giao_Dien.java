@@ -15,6 +15,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.*;
+import java.lang.*;
 
 public class Giao_Dien extends javax.swing.JFrame {
 
@@ -23,14 +25,14 @@ public class Giao_Dien extends javax.swing.JFrame {
      */
     public Giao_Dien() {
         initComponents();
-        new Thread(new Runnable(){        //tạo luồng hieen thi thoi gian
-            public void run(){
-                while(true){
-                SimpleDateFormat f = new SimpleDateFormat("hh:mm:ss");
-                String time = f.format(new Date());
-                hienthi.setFont(new Font("Arial",Font.BOLD,24));
-                hienthi.setText(time);
-                hienthi.setVisible(true);
+        new Thread(new Runnable() {        //tạo luồng hieen thi thoi gian
+            public void run() {
+                while (true) {
+                    SimpleDateFormat f = new SimpleDateFormat("hh:mm:ss");
+                    String time = f.format(new Date());
+                    hienthi.setFont(new Font("Arial", Font.BOLD, 24));
+                    hienthi.setText(time);
+                    hienthi.setVisible(true);
                 }
             }
         }).start();
@@ -74,6 +76,11 @@ public class Giao_Dien extends javax.swing.JFrame {
         tatNgay.setText("Tắt Ngay");
 
         dat.setText("Đặt");
+        dat.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                datActionPerformed(evt);
+            }
+        });
 
         huy.setText("Hủy");
 
@@ -149,10 +156,34 @@ public class Giao_Dien extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
+    private void datActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_datActionPerformed
+        // TODO add your handling code here:
+        new Thread(new Runnable() {        //tạo luồng hieen thi thoi gian
+            public void run() {
+                int k = comboboxHour.getSelectedIndex(); // lấy giá trị giờ hẹn
+                int h = comboboxMinutes.getSelectedIndex(); // lấy giá trị phút hẹn
+
+                System.out.println(k);
+                int time = k * 60 * 60 + h * 60;
+                System.out.println(time);
+
+                String link = "c:\\Windows\\System32\\shutdown -s -t " + String.valueOf(time);
+                try {
+                    Runtime.getRuntime().exec(link);
+                } catch (IOException e) {
+                }
+//                dat.setEnabled(false);
+                
+            }
+        }
+
+    ).start();
+    }//GEN-LAST:event_datActionPerformed
+
+/**
+ * @param args the command line arguments
+ */
+public static void main(String args[]) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
@@ -166,13 +197,37 @@ public class Giao_Dien extends javax.swing.JFrame {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(Giao_Dien.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Giao_Dien
+
+
+
+.class
+
+.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(Giao_Dien.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Giao_Dien
+
+
+
+.class
+
+.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(Giao_Dien.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Giao_Dien
+
+
+
+.class
+
+.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(Giao_Dien.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Giao_Dien
+
+
+
+.class
+
+.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
 
