@@ -19,6 +19,9 @@ import java.util.*;
 import java.lang.*;
 import javax.swing.JOptionPane;
 import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
 public class Giao_Dien extends javax.swing.JFrame {
 
@@ -27,31 +30,14 @@ public class Giao_Dien extends javax.swing.JFrame {
      */
     public Giao_Dien() {
         initComponents();
-//        new Thread(new Runnable() {
-//            @Test
-//            public void run() {
-//                String cmdCurrentBrightness = "powershell.exe powershell -Command \"Get-Ciminstance -Namespace root/WMI -ClassName WmiMonitorBrightness | Select -ExpandProperty \"CurrentBrightness\"\"";
-//
-//                Process powerShellProcess = Runtime.getRuntime().exec(cmdCurrentBrightness);
-//
-//                powerShellProcess.getOutputStream().close();
-//
-//                String line;
-//
-//                BufferedReader stdin = new BufferedReader(new InputStreamReader(powerShellProcess.getInputStream()));
-//                while ((line = stdin.readLine()) != null) {
-//                    System.out.println(line);
-//                }
-//                System.out.println(line);
-//                stdin.close();
-//            }
-//        }
-//
-//            ).start();
+        new Thread(new Runnable() {        //tạo luồng hieen thi thoi gian
 
-//        line1 = br.readLine();
-//        int currentBrightness = Integer.parseInt(line1);
-//        BrightnessManager.setBrightness(Math.round(currentBrightness));
+            public void run() {
+              setBrightnessCurrent();
+            }
+        }).start();
+        //        int currentBrightness = Integer.parseInt(line);
+        //        BrightnessManager.setBrightness(Math.round(currentBrightness));
         new Thread(new Runnable() {        //tạo luồng hieen thi thoi gian
 
             public void run() {
@@ -61,10 +47,43 @@ public class Giao_Dien extends javax.swing.JFrame {
                     hienthi.setFont(new Font("Arial", Font.BOLD, 24));
                     hienthi.setText(time);
                     hienthi.setVisible(true);
+
+                }
+
+            }
+        }).start();
+///        BrightnessManager.setBrightness(58);
+    }
+
+    public void setBrightnessCurrent() {
+        try {
+            ProcessBuilder pb = new ProcessBuilder("powershell.exe", "/c", "Get-Ciminstance -Namespace root/WMI -ClassName WmiMonitorBrightness | Select -ExpandProperty \"CurrentBrightness\"").redirectErrorStream(true);
+            Process process = pb.start();
+            StringBuilder result = new StringBuilder(80);
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                while (true) {
+                    String line = in.readLine();
+                    if (line == null) {
+                        break;
+                    }
+                    result.append(line);
                 }
             }
-        } ).start();
-///        BrightnessManager.setBrightness(58);
+            
+            System.out.println(result.toString());
+            int crrBrightnessLevel = Integer.parseInt(result.toString());
+            System.out.println(crrBrightnessLevel);
+			sliderBrightness.setValue(crrBrightnessLevel);
+			
+            
+            
+            
+
+        } catch (Exception e) {
+            System.out.println("Error");
+            e.printStackTrace(); // In cai dong ni ra de debug xem loi.
+        }
+
     }
 
     /**
@@ -139,7 +158,8 @@ public class Giao_Dien extends javax.swing.JFrame {
         textMinutes.setText("00");
 
         sliderBrightness.setForeground(new java.awt.Color(0, 0, 0));
-        sliderBrightness.setMajorTickSpacing(50);
+		setBrightnessCurrent();
+       sliderBrightness.setMajorTickSpacing(50);
         sliderBrightness.setMinorTickSpacing(5);
         sliderBrightness.setPaintLabels(true);
         sliderBrightness.setPaintTicks(true);
@@ -215,7 +235,8 @@ public class Giao_Dien extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
-     public void commandLine() {
+    
+    public void commandLine() {
 
         String option = buttonGroup1.getSelection().getActionCommand();
         System.out.println(option);
@@ -295,7 +316,6 @@ public class Giao_Dien extends javax.swing.JFrame {
                     int h = Integer.parseInt(textMinutes.getText()); // lấy giá trị phút hẹn
 
                     //                System.out.println(k);
-
                     String message = "Windowns will shutdown after " + String.valueOf(k) + " hour " + String.valueOf(h) + " minutes";
                     JOptionPane.showMessageDialog(null, message, "Windowns logon reminder", JOptionPane.WARNING_MESSAGE);
 

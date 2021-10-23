@@ -34,9 +34,9 @@ public class BrightnessManager {
         BufferedReader stderr = new BufferedReader(new InputStreamReader(powerShellProcess.getErrorStream()));
         line = stderr.readLine();
         if (line != null) {
-            System.err.println("Standard Error:");
+            System.out.println("Standard Error:");
             do {
-                System.err.println(line);
+                System.out.println(line);
             } while ((line = stderr.readLine()) != null);
 
         }
