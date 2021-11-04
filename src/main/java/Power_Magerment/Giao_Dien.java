@@ -9,6 +9,7 @@ package Power_Magerment;
  *
  * @author Ngoc
  */
+import Power_Magerment.BaterrySystem.PowerSource;
 import java.awt.Font;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -29,36 +30,42 @@ public class Giao_Dien extends javax.swing.JFrame {
      * Creates new form Giao_Dien
      */
     public Giao_Dien() {
-        initComponents();
-        new Thread(new Runnable() {        //tạo luồng hieen thi thoi gian
 
-            public void run() {
-              setBrightnessCurrent();
-            }
-        }).start();
-        //        int currentBrightness = Integer.parseInt(line);
-        //        BrightnessManager.setBrightness(Math.round(currentBrightness));
+        initComponents();
+        this.setLocationRelativeTo(this); //xuất hiện ở giữa màn hình
+        setBatterySystem();
+        setBrightnessCurrent();
+        setDateAndTime();
+
+    }
+
+    public void setDateAndTime() {
         new Thread(new Runnable() {        //tạo luồng hieen thi thoi gian
 
             public void run() {
                 while (true) {
-                    SimpleDateFormat f = new SimpleDateFormat("hh:mm:ss");
+                    SimpleDateFormat f = new SimpleDateFormat("EEEE dd/MM/yyyy \n HH:mm:ss");
                     String time = f.format(new Date());
-                    hienthi.setFont(new Font("Arial", Font.BOLD, 24));
+                    hienthi.setFont(new Font("Arial", Font.BOLD, 15));
                     hienthi.setText(time);
                     hienthi.setVisible(true);
+                    try {
+                        Thread.sleep(1000); // 1 second
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
 
                 }
 
             }
         }).start();
-///        BrightnessManager.setBrightness(58);
     }
 
     public void setBrightnessCurrent() {
         try {
             ProcessBuilder pb = new ProcessBuilder("powershell.exe", "/c", "Get-Ciminstance -Namespace root/WMI -ClassName WmiMonitorBrightness | Select -ExpandProperty \"CurrentBrightness\"").redirectErrorStream(true);
-            Process process = pb.start();
+            Process process = pb.start(); // thực thi command line;
+            //lấy kết quả trả về trên command line
             StringBuilder result = new StringBuilder(80);
             try (BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 while (true) {
@@ -69,21 +76,67 @@ public class Giao_Dien extends javax.swing.JFrame {
                     result.append(line);
                 }
             }
-            
+
             System.out.println(result.toString());
             int crrBrightnessLevel = Integer.parseInt(result.toString());
             System.out.println(crrBrightnessLevel);
-			sliderBrightness.setValue(crrBrightnessLevel);
-			
-            
-            
-            
+            sliderBrightness.setValue(crrBrightnessLevel);
 
         } catch (Exception e) {
             System.out.println("Error");
             e.printStackTrace(); // In cai dong ni ra de debug xem loi.
         }
 
+    }
+
+    private void setBatterySystem() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    StringBuilder sb = new StringBuilder("Power: ");
+
+                    if (PowerSource.getPowerSources().length == 0) {
+                        sb.append("Unknown");
+                    } else {
+                        double timeRemaining = PowerSource.getPowerSources()[0].getTimeRemaining();
+
+                        if (timeRemaining < -1d) {
+                            sb.append("Charging");
+                        } else if (timeRemaining < 0d) {
+                            sb.append("Calculating time remaining");
+                        } else {
+                            sb.append(String.format("%d:%02d' remaining", (int) (timeRemaining / 3600),
+                                    (int) (timeRemaining / 60) % 60));
+                        }
+                    }
+
+                    for (PowerSource pSource : PowerSource.getPowerSources()) {
+                        sb.append(String.format("%n %s  %.1f%%", pSource.getName(),
+                                pSource.getRemainingCapacity() * 100d));
+                    }
+                    final String tmp[] = sb.toString().split("\r");
+                    powerLabel.setText(tmp[0].trim());
+                    batteryLabel.setText(tmp[1].trim());
+
+                    try {
+                        Thread.sleep(30000); // 30s
+
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }).start();
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                System.out.println("Hello");
+//                powerLabel.setText(tmp[0].trim());
+//                batteryLabel.setText(tmp[1].trim());
+//
+//            }
+//        }).start();
     }
 
     /**
@@ -104,6 +157,8 @@ public class Giao_Dien extends javax.swing.JFrame {
         textHour = new javax.swing.JTextField();
         textMinutes = new javax.swing.JTextField();
         sliderBrightness = new javax.swing.JSlider();
+        powerLabel = new javax.swing.JLabel();
+        batteryLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -158,8 +213,7 @@ public class Giao_Dien extends javax.swing.JFrame {
         textMinutes.setText("00");
 
         sliderBrightness.setForeground(new java.awt.Color(0, 0, 0));
-		setBrightnessCurrent();
-       sliderBrightness.setMajorTickSpacing(50);
+        sliderBrightness.setMajorTickSpacing(50);
         sliderBrightness.setMinorTickSpacing(5);
         sliderBrightness.setPaintLabels(true);
         sliderBrightness.setPaintTicks(true);
@@ -169,6 +223,10 @@ public class Giao_Dien extends javax.swing.JFrame {
             }
         });
 
+        powerLabel.setText("jLabel1");
+
+        batteryLabel.setText("jLabel2");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -176,14 +234,18 @@ public class Giao_Dien extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(shutdown, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(sleep, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(restart, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(hibernate, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                            .addComponent(hibernate, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(39, 39, 39)
+                        .addComponent(powerLabel)
+                        .addGap(40, 40, 40)
+                        .addComponent(batteryLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(shutdown, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(22, 22, 22)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
@@ -198,11 +260,11 @@ public class Giao_Dien extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(257, 257, 257)
-                        .addComponent(hienthi, javax.swing.GroupLayout.PREFERRED_SIZE, 163, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
                         .addGap(72, 72, 72)
-                        .addComponent(sliderBrightness, javax.swing.GroupLayout.PREFERRED_SIZE, 572, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(sliderBrightness, javax.swing.GroupLayout.PREFERRED_SIZE, 572, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(257, 257, 257)
+                        .addComponent(hienthi, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(100, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -210,7 +272,7 @@ public class Giao_Dien extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addGap(24, 24, 24)
                 .addComponent(hienthi, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(42, 42, 42)
+                .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(textHour, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(textMinutes, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -225,17 +287,21 @@ public class Giao_Dien extends javax.swing.JFrame {
                             .addComponent(dat)))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(18, 18, 18)
-                        .addComponent(shutdown)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(shutdown)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(powerLabel)
+                                .addComponent(batteryLabel)))
                         .addGap(18, 18, 18)
                         .addComponent(sleep)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 95, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 119, Short.MAX_VALUE)
                 .addComponent(sliderBrightness, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(124, 124, 124))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
-    
+
     public void commandLine() {
 
         String option = buttonGroup1.getSelection().getActionCommand();
@@ -328,13 +394,7 @@ public class Giao_Dien extends javax.swing.JFrame {
 
         }).start();
     }
-//    public void brightnessManagerThread(){
-//        new Thread(new Runnable(){
-//            public void run(){
-//                BrightnessManager.setBrightness(Math.round(sliderBrightness.getValue()));
-//            }
-//        }).start();
-//    }
+
     private void datActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_datActionPerformed
         // TODO add your handling code here:
         shutdown.setActionCommand("Shut down");
@@ -417,11 +477,13 @@ public class Giao_Dien extends javax.swing.JFrame {
 
     static String cmd = "";
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel batteryLabel;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JButton dat;
     private javax.swing.JRadioButton hibernate;
     private javax.swing.JTextField hienthi;
     private javax.swing.JButton huy;
+    private javax.swing.JLabel powerLabel;
     private javax.swing.JRadioButton restart;
     private javax.swing.JRadioButton shutdown;
     private javax.swing.JRadioButton sleep;
