@@ -5,6 +5,23 @@
     <artifactId>DoAnHeDieuHanh</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
+    <dependencies>
+        <dependency>
+            <groupId>group.id</groupId>
+            <artifactId>artifact.id</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>jna</groupId>
+            <artifactId>1</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.external</groupId>
+            <artifactId>AbsoluteLayout</artifactId>
+            <version>RELEASE125</version>
+        </dependency>
+    </dependencies>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>16</maven.compiler.source>
